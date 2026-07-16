@@ -15,7 +15,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background-color: var(--rosa);
+  background-color: #fff9fb;
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

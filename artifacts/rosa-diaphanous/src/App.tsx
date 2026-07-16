@@ -2,6 +2,7 @@ import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import phrases from "./phrases.json";
 import girlAvatar from "@assets/ChatGPT_Image_3_lug_2026__01_58_27-removebg-preview_1784160643734.png";
 import boyAvatar from "@assets/ChatGPT_Image_15_lug_2026__15_32_52-removebg-preview_1784160650131.png";
+import bgFloral from "@assets/image_1784162530331.png";
 
 const phrase = phrases[Math.floor(Math.random() * phrases.length)];
 
@@ -215,7 +216,15 @@ export default function App() {
   const glowRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="site-wrapper">
+    <div
+      className="site-wrapper"
+      style={{
+        backgroundImage: `url(${bgFloral})`,
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center top",
+      }}
+    >
       <div
         ref={glowRef}
         className="glow-cursor"
