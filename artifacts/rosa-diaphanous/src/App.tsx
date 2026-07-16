@@ -99,10 +99,10 @@ function Road() {
   const GIRL_Y = 102;
 
   /* avatar sizes */
-  const BOY_W  = 84;
-  const BOY_H  = 84;
-  const GIRL_W = 96;
-  const GIRL_H = 96;
+  const BOY_W  = 108;
+  const BOY_H  = 108;
+  const GIRL_W = 120;
+  const GIRL_H = 120;
 
   return (
     <div className="road-section">
