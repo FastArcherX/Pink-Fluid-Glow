@@ -50,13 +50,16 @@ function CountdownDisplay() {
     { value: seconds, label: "SECONDS" },
   ];
   return (
-    <div className="countdown-wrap">
-      {units.map(({ value, label }) => (
-        <div key={label} className="countdown-card">
-          <span className="countdown-num">{label === "DAYS" ? value : pad(value)}</span>
-          <span className="countdown-label">{label}</span>
-        </div>
-      ))}
+    <div className="countdown-block">
+      <div className="countdown-wrap">
+        {units.map(({ value, label }) => (
+          <div key={label} className="countdown-card">
+            <span className="countdown-num">{label === "DAYS" ? value : pad(value)}</span>
+            <span className="countdown-label">{label}</span>
+          </div>
+        ))}
+      </div>
+      <p className="countdown-subtitle">I'll be back in your arms on August 27th ♡</p>
     </div>
   );
 }
@@ -162,9 +165,6 @@ function Road() {
         {/* ── Boy position dot ── */}
         <circle cx={boyPos.x} cy={boyPos.y} r="4" className="dot-past" />
 
-        {/* ── Date labels ── */}
-        <text x="70"  y="172" textAnchor="middle" className="road-label">23 GIU</text>
-        <text x="940" y="172" textAnchor="middle" className="road-label">27 AGO</text>
 
         {/* ── Decorative hearts ── */}
         {HEARTS.map((h, i) => (

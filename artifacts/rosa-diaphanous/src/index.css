@@ -102,11 +102,27 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ─── Countdown ───────────────────────────────────────────── */
+.countdown-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
 .countdown-wrap {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+}
+
+.countdown-subtitle {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-style: italic;
+  color: var(--ink-light);
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .countdown-card {
