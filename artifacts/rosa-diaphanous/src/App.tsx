@@ -158,6 +158,9 @@ function Road() {
         <circle cx="70"  cy="108" r="4" className="dot-past"   />
         <circle cx="940" cy="102" r="4" className="dot-future" />
 
+        {/* ── Boy position dot ── */}
+        <circle cx={boyPos.x} cy={boyPos.y} r="4" className="dot-past" />
+
         {/* ── Date labels ── */}
         <text x="70"  y="172" textAnchor="middle" className="road-label">23 GIU</text>
         <text x="940" y="172" textAnchor="middle" className="road-label">27 AGO</text>
