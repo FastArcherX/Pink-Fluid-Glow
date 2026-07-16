@@ -82,12 +82,19 @@ a { color: inherit; text-decoration: none; }
 }
 
 .hero-title {
-  font-size: clamp(4rem, 13vw, 11rem);
+  font-size: clamp(2.8rem, 7vw, 6.5rem);
   font-weight: 300;
   font-style: italic;
-  line-height: 0.92;
+  line-height: 1.05;
   letter-spacing: -0.02em;
   color: var(--ink);
+  max-width: 18ch;
+  text-align: center;
+  text-wrap: balance;
+  min-height: 2.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ─── Road section ────────────────────────────────────────── */

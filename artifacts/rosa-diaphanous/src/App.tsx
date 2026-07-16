@@ -34,7 +34,7 @@ function useMouseGlow() {
 
 /* ── Road component ──────────────────────────────────────────── */
 function Road() {
-  const START = new Date("2026-07-02T00:00:00").getTime();
+  const START = new Date("2026-06-23T00:00:00").getTime();
   const END   = new Date("2026-08-27T23:59:59").getTime();
   const now   = Date.now();
   const progress = Math.min(1, Math.max(0, (now - START) / (END - START)));
@@ -50,7 +50,7 @@ function Road() {
   }, []);
 
   const daysPassed = Math.floor((now - START) / 864e5);
-  const daysLeft   = Math.max(0, 56 - daysPassed);
+  const daysLeft   = Math.max(0, 65 - daysPassed);
 
   /* girl is always at the path endpoint */
   const GIRL_X = 940;
@@ -117,7 +117,7 @@ function Road() {
         <circle cx="940" cy="102" r="4" className="dot-future" />
 
         {/* ── Date labels ── */}
-        <text x="70"  y="172" textAnchor="middle" className="road-label">2 LUG</text>
+        <text x="70"  y="172" textAnchor="middle" className="road-label">23 GIU</text>
         <text x="940" y="172" textAnchor="middle" className="road-label">27 AGO</text>
 
         {/* ── Decorative hearts ── */}
@@ -180,11 +180,7 @@ export default function App() {
       <section className="hero">
         <div className="hero-inner">
           <span className="eyebrow">Made with 💕 by Samu</span>
-          <h1 className="hero-title">
-            {phrase.split("\n").map((line, i, arr) => (
-              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-            ))}
-          </h1>
+          <h1 className="hero-title">{phrase}</h1>
         </div>
       </section>
 
