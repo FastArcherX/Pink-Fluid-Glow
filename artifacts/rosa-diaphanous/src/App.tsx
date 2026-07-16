@@ -18,6 +18,48 @@ const HEARTS = [
   { x: 845, y: 130, s: 7,  d: 0.5 },
 ];
 
+/* ── Countdown hook ──────────────────────────────────────────── */
+const TARGET = new Date("2026-08-27T23:59:59").getTime();
+
+function useCountdown() {
+  const calc = () => {
+    const diff = Math.max(0, TARGET - Date.now());
+    return {
+      days:    Math.floor(diff / 864e5),
+      hours:   Math.floor((diff % 864e5) / 36e5),
+      minutes: Math.floor((diff % 36e5)  / 6e4),
+      seconds: Math.floor((diff % 6e4)   / 1e3),
+    };
+  };
+  const [time, setTime] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setTime(calc()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
+function CountdownDisplay() {
+  const { days, hours, minutes, seconds } = useCountdown();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const units = [
+    { value: days,    label: "DAYS"    },
+    { value: hours,   label: "HOURS"   },
+    { value: minutes, label: "MINUTES" },
+    { value: seconds, label: "SECONDS" },
+  ];
+  return (
+    <div className="countdown-wrap">
+      {units.map(({ value, label }) => (
+        <div key={label} className="countdown-card">
+          <span className="countdown-num">{label === "DAYS" ? value : pad(value)}</span>
+          <span className="countdown-label">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── Mouse glow hook ─────────────────────────────────────────── */
 function useMouseGlow() {
   const [pos, setPos] = useState({ x: -1000, y: -1000 });
@@ -64,7 +106,7 @@ function Road() {
 
   return (
     <div className="road-section">
-      <p className="road-days">{daysLeft} giorni al 27 agosto</p>
+      <CountdownDisplay />
 
       <svg
         viewBox="0 0 1000 190"
