@@ -2,7 +2,7 @@ import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import phrases from "./phrases.json";
 import girlAvatar from "@assets/ChatGPT_Image_3_lug_2026__01_58_27-removebg-preview_1784160643734.png";
 import boyAvatar from "@assets/ChatGPT_Image_15_lug_2026__15_32_52-removebg-preview_1784160650131.png";
-import bgFloral from "@assets/image_1784162530331.png";
+import bgFloral from "@assets/ChatGPT_Image_16_lug_2026,_02_47_11_1784162852061.png";
 
 const phrase = phrases[Math.floor(Math.random() * phrases.length)];
 
