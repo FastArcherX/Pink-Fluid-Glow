@@ -99,17 +99,17 @@ function Road() {
   const GIRL_Y = 102;
 
   /* avatar sizes */
-  const BOY_W  = 58;
-  const BOY_H  = 58;
-  const GIRL_W = 70;
-  const GIRL_H = 70;
+  const BOY_W  = 84;
+  const BOY_H  = 84;
+  const GIRL_W = 96;
+  const GIRL_H = 96;
 
   return (
     <div className="road-section">
       <CountdownDisplay />
 
       <svg
-        viewBox="0 0 1000 190"
+        viewBox="0 0 1000 210"
         preserveAspectRatio="xMidYMid meet"
         className="road-svg"
         xmlns="http://www.w3.org/2000/svg"
@@ -117,10 +117,10 @@ function Road() {
         <defs>
           {/* Split road at boy's x position */}
           <clipPath id="cp-past">
-            <rect x="0" y="0" width={boyPos.x} height="190" />
+            <rect x="0" y="0" width={boyPos.x} height="210" />
           </clipPath>
           <clipPath id="cp-future">
-            <rect x={boyPos.x} y="0" width="1000" height="190" />
+            <rect x={boyPos.x} y="0" width="1000" height="210" />
           </clipPath>
 
           {/* Soft glow filter for avatars */}
