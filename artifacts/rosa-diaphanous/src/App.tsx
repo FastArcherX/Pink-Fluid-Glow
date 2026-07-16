@@ -180,7 +180,7 @@ function Road() {
             <image
               href={girlAvatar}
               x={-GIRL_W / 2}
-              y={-GIRL_H}
+              y={-GIRL_H + 22}
               width={GIRL_W}
               height={GIRL_H}
               filter="url(#shadow)"
@@ -194,7 +194,7 @@ function Road() {
             <image
               href={boyAvatar}
               x={-BOY_W / 2}
-              y={-BOY_H}
+              y={-BOY_H + 22}
               width={BOY_W}
               height={BOY_H}
               filter="url(#shadow)"
