@@ -15,27 +15,57 @@ function sr(n: number) {
   return x - Math.floor(x);
 }
 
-const CURTAIN_TILES = Array.from({ length: 90 }, (_, i) => ({
-  id:      i,
-  src:     FLOWER_SRCS[Math.floor(sr(i + 7) * FLOWER_SRCS.length)],
-  x:       sr(i)       * 110 - 5,          // -5% … 105% for edge coverage
-  y:       sr(i + 50)  * 115 - 10,
-  size:    130 + sr(i + 200) * 130,
-  rot:     sr(i + 300) * 360,
-  fallDx:  (sr(i + 400) - 0.5) * 200,     // ±100px lateral drift
-  fallDy:  110 + sr(i + 500) * 30,        // 110–140 vh
-  dur:     2200 + sr(i + 600) * 1200,     // 2.2s – 3.4s per flower
-  delay:   sr(i + 700) * 900,             // 0–900ms stagger
-}));
+// Stratified grid (12 cols × 9 rows) + 30 gap-fillers = 138 flowers guaranteed coverage
+const COLS = 12, ROWS = 9;
+const CURTAIN_TILES = (() => {
+  const tiles = [];
+  let k = 0;
+  // Grid layer — one flower per cell, randomly placed within cell
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const cw = 100 / COLS, ch = 100 / ROWS;
+      tiles.push({
+        id:     k,
+        src:    FLOWER_SRCS[Math.floor(sr(k + 7)  * FLOWER_SRCS.length)],
+        x:      col * cw + sr(k)       * cw * 0.9 - cw * 0.05,
+        y:      row * ch + sr(k + 200) * ch * 0.9 - ch * 0.05,
+        size:   160 + sr(k + 400) * 110,
+        rot:    sr(k + 600) * 360,
+        fallDx: (sr(k + 800) - 0.5) * 200,
+        fallDy: 110 + sr(k + 1000) * 30,
+        dur:    2400 + sr(k + 1200) * 1400,
+        delay:  sr(k + 1400) * 900,
+      });
+      k++;
+    }
+  }
+  // Extra gap-filler layer
+  for (let j = 0; j < 30; j++) {
+    tiles.push({
+      id:     k,
+      src:    FLOWER_SRCS[Math.floor(sr(k + 3) * FLOWER_SRCS.length)],
+      x:      sr(k)       * 108 - 4,
+      y:      sr(k + 500) * 108 - 4,
+      size:   140 + sr(k + 900) * 80,
+      rot:    sr(k + 1100) * 360,
+      fallDx: (sr(k + 1300) - 0.5) * 180,
+      fallDy: 112 + sr(k + 1500) * 28,
+      dur:    2400 + sr(k + 1700) * 1400,
+      delay:  sr(k + 1900) * 900,
+    });
+    k++;
+  }
+  return tiles;
+})();
 
-function FlowerCurtain() {
+function FlowerCurtain({ onFall }: { onFall: () => void }) {
   const [phase, setPhase] = useState<"show"|"fall"|"done">("show");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("fall"), 2000);
-    const t2 = setTimeout(() => setPhase("done"), 2000 + 3400 + 900); // show + max-dur + max-delay
+    const t1 = setTimeout(() => { setPhase("fall"); onFall(); }, 2000);
+    const t2 = setTimeout(() => setPhase("done"), 2000 + 3800 + 900);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, [onFall]);
 
   if (phase === "done") return null;
 
@@ -333,11 +363,13 @@ export default function App() {
   const { pos, visible } = useMouseGlow();
   const glowRef = useRef<HTMLDivElement>(null);
   const titleRef = useFitLines(2);
+  const [siteReady, setSiteReady] = useState(false);
+  const onFall = useRef(() => setSiteReady(true)).current;
 
   return (
     <>
-    <FlowerCurtain />
-    <PetalRain />
+    <FlowerCurtain onFall={onFall} />
+    {siteReady && <PetalRain />}
     <div
       className="site-wrapper"
       style={{
@@ -345,6 +377,7 @@ export default function App() {
         backgroundSize: "cover",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center top",
+        visibility: siteReady ? "visible" : "hidden",
       }}
     >
       <div
