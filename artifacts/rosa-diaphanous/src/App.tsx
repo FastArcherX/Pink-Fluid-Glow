@@ -192,21 +192,22 @@ function PetalRain() {
   );
 }
 
-/* ── Shrink font to fit N lines ───────────────────────────── */
-function useFitLines(maxLines: number, deps: unknown[] = []) {
+/* ── Shrink font to fit N lines (imperative helper) ──────── */
+function fitText(el: HTMLElement, maxLines: number) {
+  let size = 104;
+  el.style.fontSize = size + "px";
+  const lineH = parseFloat(getComputedStyle(el).lineHeight);
+  while (el.scrollHeight > Math.ceil(lineH * maxLines + 8) && size > 28) {
+    size -= 1;
+    el.style.fontSize = size + "px";
+  }
+}
+
+function useFitLines(maxLines: number) {
   const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let size = 104;
-    el.style.fontSize = size + "px";
-    const lineH = parseFloat(getComputedStyle(el).lineHeight);
-    while (el.scrollHeight > Math.ceil(lineH * maxLines + 8) && size > 28) {
-      size -= 1;
-      el.style.fontSize = size + "px";
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxLines, ...deps]);
+    if (ref.current) fitText(ref.current, maxLines);
+  }, [maxLines]);
   return ref;
 }
 
@@ -416,26 +417,67 @@ function Road() {
 
 /* ── App ─────────────────────────────────────────────────────── */
 const PHRASE_INTERVAL_MS = 60_000;
-const FADE_MS = 500;
+const ERASE_MS  = 38;   // ms per character erased
+const TYPE_MS   = 58;   // ms per character typed
 
 export default function App() {
   const { pos, visible } = useMouseGlow();
-  const glowRef = useRef<HTMLDivElement>(null);
-  const [phrase, setPhrase] = useState(() => pickPhrase());
-  const [fading, setFading] = useState(false);
-  const titleRef = useFitLines(2, [phrase]);
+  const glowRef  = useRef<HTMLDivElement>(null);
+  const titleRef = useFitLines(2);
   const [siteReady, setSiteReady] = useState(false);
 
+  // typewriter state
+  const initialPhrase = useRef(pickPhrase()).current;
+  const [displayText, setDisplayText] = useState(initialPhrase);
+  const animRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // helper: cancel any running animation
+  const cancelAnim = () => { if (animRef.current !== null) { clearTimeout(animRef.current); animRef.current = null; } };
+
+  // erase → type sequence
+  const runTypewriter = (fromText: string, toText: string) => {
+    cancelAnim();
+    let text = fromText;
+
+    const eraseStep = () => {
+      if (text.length === 0) {
+        // pre-fit font for the incoming phrase before typing starts
+        if (titleRef.current) {
+          titleRef.current.textContent = toText;
+          fitText(titleRef.current, 2);
+          titleRef.current.textContent = "";
+        }
+        setDisplayText("");
+        animRef.current = setTimeout(typeStep, TYPE_MS);
+        return;
+      }
+      text = text.slice(0, -1);
+      setDisplayText(text);
+      animRef.current = setTimeout(eraseStep, ERASE_MS);
+    };
+
+    let typeIdx = 0;
+    const typeStep = () => {
+      typeIdx++;
+      setDisplayText(toText.slice(0, typeIdx));
+      if (typeIdx < toText.length) {
+        animRef.current = setTimeout(typeStep, TYPE_MS);
+      }
+    };
+
+    animRef.current = setTimeout(eraseStep, ERASE_MS);
+  };
+
+  // 60-second cycle
   useEffect(() => {
     const id = setInterval(() => {
-      setFading(true);
-      setTimeout(() => {
-        setPhrase(pickPhrase());
-        setFading(false);
-      }, FADE_MS);
+      const next = pickPhrase();
+      setDisplayText(cur => { runTypewriter(cur, next); return cur; });
     }, PHRASE_INTERVAL_MS);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); cancelAnim(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const onFall = useRef(() => setSiteReady(true)).current;
 
   return (
@@ -460,11 +502,12 @@ export default function App() {
       <section className="hero">
         <div className="hero-inner">
           <span className="eyebrow">Made with 💕 by your Samu</span>
-          <div className={`hero-title-wrap${fading ? " fading" : ""}`}>
+          <div className="hero-title-wrap">
             <h1 ref={titleRef} className="hero-title">
-              {phrase.split("\n").map((line, i, arr) => (
+              {displayText.split("\n").map((line, i, arr) => (
                 <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
               ))}
+              <span className="typewriter-cursor" aria-hidden="true">|</span>
             </h1>
           </div>
         </div>

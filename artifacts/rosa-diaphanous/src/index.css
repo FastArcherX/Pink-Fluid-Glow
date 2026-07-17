@@ -89,10 +89,20 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.5s ease;
 }
-.hero-title-wrap.fading {
-  opacity: 0;
+
+/* Typewriter cursor */
+.typewriter-cursor {
+  display: inline;
+  font-weight: 100;
+  font-style: normal;
+  color: #c9748a;
+  margin-left: 0.06em;
+  animation: tw-blink 1.1s step-end infinite;
+}
+@keyframes tw-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
 
 .hero-title {
