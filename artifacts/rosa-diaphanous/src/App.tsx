@@ -6,6 +6,63 @@ import bgFloral from "@assets/ChatGPT_Image_16_lug_2026,_02_47_11_1784162852061.
 
 const phrase = phrases[Math.floor(Math.random() * phrases.length)];
 
+/* ── Flower curtain (intro) ───────────────────────────────── */
+const FLOWER_SRCS = [1,2,3,4,5,7,9].map(n => `/flowers/flower${n}.png`);
+
+// Pre-generate a fixed dense grid of flowers so they don't re-randomise
+const CURTAIN_TILES = Array.from({ length: 56 }, (_, i) => {
+  const col = i % 8;
+  const row = Math.floor(i / 8);
+  return {
+    id: i,
+    src:    FLOWER_SRCS[i % FLOWER_SRCS.length],
+    x:      col * 13.5 + (((i * 37) % 10) - 5),     // % of viewport
+    y:      row * 18   + (((i * 53) % 10) - 5),
+    size:   140 + (i * 29) % 100,
+    rot:    (i * 47) % 360,
+    fallDx: (((i * 31) % 60) - 30),  // px lateral drift when falling
+    delay:  (i * 17) % 300,           // ms stagger
+  };
+});
+
+function FlowerCurtain() {
+  const [phase, setPhase] = useState<"show"|"fall"|"done">("show");
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("fall"), 600);
+    const t2 = setTimeout(() => setPhase("done"), 600 + 1800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  if (phase === "done") return null;
+
+  return (
+    <div className="flower-curtain" aria-hidden="true">
+      {CURTAIN_TILES.map(f => (
+        <img
+          key={f.id}
+          src={f.src}
+          draggable={false}
+          style={{
+            position:   "absolute",
+            left:       `${f.x}%`,
+            top:        `${f.y}%`,
+            width:      f.size,
+            height:     f.size,
+            objectFit:  "contain",
+            transform:  phase === "fall"
+              ? `translate3d(${f.fallDx}px, 120vh, 0) rotate(${f.rot + 60}deg)`
+              : `rotate(${f.rot}deg)`,
+            transition: phase === "fall"
+              ? `transform 1.6s cubic-bezier(.4,0,.6,1) ${f.delay}ms`
+              : "none",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* ── Petal rain ───────────────────────────────────────────── */
 const PETAL_COUNT = 90;
 const PETALS = Array.from({ length: PETAL_COUNT }, (_, i) => ({
@@ -276,6 +333,7 @@ export default function App() {
 
   return (
     <>
+    <FlowerCurtain />
     <PetalRain />
     <div
       className="site-wrapper"

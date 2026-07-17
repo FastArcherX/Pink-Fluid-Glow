@@ -196,6 +196,16 @@ a { color: inherit; text-decoration: none; }
   animation: heartFloat 2.8s ease-in-out infinite;
 }
 
+/* ─── Flower curtain (intro) ──────────────────────────────── */
+.flower-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  pointer-events: none;
+  background: #f7d0da;
+}
+
 /* ─── Petal rain ──────────────────────────────────────────── */
 .petal-container {
   position: fixed;
