@@ -233,7 +233,11 @@ export default function App() {
       <section className="hero">
         <div className="hero-inner">
           <span className="eyebrow">Made with 💕 by your Samu</span>
-          <h1 className="hero-title">{phrase}</h1>
+          <h1 className="hero-title">
+            {phrase.split("\n").map((line, i, arr) => (
+              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+            ))}
+          </h1>
         </div>
       </section>
       <Road />
