@@ -10,18 +10,18 @@ const phrase = phrases[Math.floor(Math.random() * phrases.length)];
 const FLOWER_SRCS = [1,2,3,4,5,7,9].map(n => `/flowers/flower${n}.png`);
 
 // Pre-generate a fixed dense grid of flowers so they don't re-randomise
-const CURTAIN_TILES = Array.from({ length: 56 }, (_, i) => {
-  const col = i % 8;
-  const row = Math.floor(i / 8);
+const CURTAIN_TILES = Array.from({ length: 80 }, (_, i) => {
+  const col = i % 10;
+  const row = Math.floor(i / 10);
   return {
     id: i,
     src:    FLOWER_SRCS[i % FLOWER_SRCS.length],
-    x:      col * 13.5 + (((i * 37) % 10) - 5),     // % of viewport
-    y:      row * 18   + (((i * 53) % 10) - 5),
-    size:   140 + (i * 29) % 100,
+    x:      col * 11 + (((i * 37) % 10) - 5),
+    y:      row * 16 + (((i * 53) % 10) - 5),
+    size:   150 + (i * 29) % 120,
     rot:    (i * 47) % 360,
-    fallDx: (((i * 31) % 60) - 30),  // px lateral drift when falling
-    delay:  (i * 17) % 300,           // ms stagger
+    fallDx: (((i * 31) % 80) - 40),
+    delay:  (i * 13) % 500,
   };
 });
 
@@ -29,8 +29,8 @@ function FlowerCurtain() {
   const [phase, setPhase] = useState<"show"|"fall"|"done">("show");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("fall"), 600);
-    const t2 = setTimeout(() => setPhase("done"), 600 + 1800);
+    const t1 = setTimeout(() => setPhase("fall"), 1200);
+    const t2 = setTimeout(() => setPhase("done"), 1200 + 2400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -54,7 +54,7 @@ function FlowerCurtain() {
               ? `translate3d(${f.fallDx}px, 120vh, 0) rotate(${f.rot + 60}deg)`
               : `rotate(${f.rot}deg)`,
             transition: phase === "fall"
-              ? `transform 1.6s cubic-bezier(.4,0,.6,1) ${f.delay}ms`
+              ? `transform 2.2s cubic-bezier(.4,0,.6,1) ${f.delay}ms`
               : "none",
           }}
         />

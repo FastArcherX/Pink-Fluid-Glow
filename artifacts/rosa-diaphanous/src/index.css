@@ -203,7 +203,6 @@ a { color: inherit; text-decoration: none; }
   z-index: 100;
   overflow: hidden;
   pointer-events: none;
-  background: #f7d0da;
 }
 
 /* ─── Petal rain ──────────────────────────────────────────── */
