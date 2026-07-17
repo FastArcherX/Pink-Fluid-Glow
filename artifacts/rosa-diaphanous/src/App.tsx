@@ -230,14 +230,12 @@ export default function App() {
         className="glow-cursor"
         style={{ left: pos.x, top: pos.y, opacity: visible ? 1 : 0 }}
       />
-
       <section className="hero">
         <div className="hero-inner">
-          <span className="eyebrow">Made with 💕 by Samu</span>
+          <span className="eyebrow">Made with 💕 by your Samu</span>
           <h1 className="hero-title">{phrase}</h1>
         </div>
       </section>
-
       <Road />
     </div>
   );
