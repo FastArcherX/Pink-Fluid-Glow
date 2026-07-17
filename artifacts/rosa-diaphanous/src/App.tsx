@@ -4,7 +4,32 @@ import girlAvatar from "@assets/ChatGPT_Image_3_lug_2026__01_58_27-removebg-prev
 import boyAvatar from "@assets/ChatGPT_Image_15_lug_2026__15_32_52-removebg-preview_1784160650131.png";
 import bgFloral from "@assets/ChatGPT_Image_16_lug_2026,_02_47_11_1784162852061.png";
 
-const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+function pickPhrase(): string {
+  const HISTORY_KEY = "rd_phrase_history";
+  const WINDOW = Math.floor(phrases.length * 0.6); // avoid repeating last ~60% of phrases
+  let history: number[] = [];
+  try {
+    history = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
+    if (!Array.isArray(history)) history = [];
+  } catch { history = []; }
+
+  // candidates = all indices NOT in recent history
+  const candidates = phrases
+    .map((_, i) => i)
+    .filter(i => !history.includes(i));
+
+  // safety: if somehow all are excluded, reset and pick freely
+  const pool = candidates.length > 0 ? candidates : phrases.map((_, i) => i);
+  const picked = pool[Math.floor(Math.random() * pool.length)];
+
+  // push picked to history, keep only last WINDOW entries
+  history = [...history, picked].slice(-WINDOW);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch { /* ignore */ }
+
+  return phrases[picked];
+}
+
+const phrase = pickPhrase();
 
 /* ── Flower curtain (intro) ───────────────────────────────── */
 const FLOWER_SRCS = [1,2,3,4,5,7,9].map(n => `/flowers/flower${n}.png`);
