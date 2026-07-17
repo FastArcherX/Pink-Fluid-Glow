@@ -59,7 +59,7 @@ function CountdownDisplay() {
           </div>
         ))}
       </div>
-      <p className="countdown-subtitle">I'll be back in your arms on August 27th ♡</p>
+      <p className="countdown-subtitle">Back where I belong on August 27 ♡</p>
     </div>
   );
 }
