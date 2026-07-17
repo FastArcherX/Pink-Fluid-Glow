@@ -15,43 +15,61 @@ function sr(n: number) {
   return x - Math.floor(x);
 }
 
-// Stratified grid (12 cols × 9 rows) + 30 gap-fillers = 138 flowers guaranteed coverage
-const COLS = 12, ROWS = 9;
+// Stratified grid (14 cols × 11 rows) + top/left edge strip + fillers
+const COLS = 14, ROWS = 11;
 const CURTAIN_TILES = (() => {
   const tiles = [];
   let k = 0;
-  // Grid layer — one flower per cell, randomly placed within cell
+  const cw = 110 / COLS;
+  const ch = 110 / ROWS;
+
+  // Main grid — each cell offset -12% so row0/col0 bleed well above/left of viewport
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
-      const cw = 100 / COLS, ch = 100 / ROWS;
       tiles.push({
         id:     k,
-        src:    FLOWER_SRCS[Math.floor(sr(k + 7)  * FLOWER_SRCS.length)],
-        x:      col * cw + sr(k)       * cw * 0.9 - cw * 0.05,
-        y:      row * ch + sr(k + 200) * ch * 0.9 - ch * 0.05,
-        size:   160 + sr(k + 400) * 110,
+        src:    FLOWER_SRCS[Math.floor(sr(k + 7) * FLOWER_SRCS.length)],
+        x:      col * cw - 12 + sr(k)       * cw * 0.9,
+        y:      row * ch - 12 + sr(k + 200) * ch * 0.9,
+        size:   155 + sr(k + 400) * 115,
         rot:    sr(k + 600) * 360,
-        fallDx: (sr(k + 800) - 0.5) * 200,
+        fallDx: (sr(k + 800)  - 0.5) * 220,
         fallDy: 110 + sr(k + 1000) * 30,
-        dur:    2400 + sr(k + 1200) * 1400,
-        delay:  sr(k + 1400) * 900,
+        dur:    2600 + sr(k + 1200) * 1600,
+        delay:  sr(k + 1400) * 1000,
       });
       k++;
     }
   }
-  // Extra gap-filler layer
-  for (let j = 0; j < 30; j++) {
+  // Dedicated top-edge strip (y: -20% to 5%)
+  for (let j = 0; j < 20; j++) {
     tiles.push({
       id:     k,
-      src:    FLOWER_SRCS[Math.floor(sr(k + 3) * FLOWER_SRCS.length)],
-      x:      sr(k)       * 108 - 4,
-      y:      sr(k + 500) * 108 - 4,
-      size:   140 + sr(k + 900) * 80,
-      rot:    sr(k + 1100) * 360,
-      fallDx: (sr(k + 1300) - 0.5) * 180,
-      fallDy: 112 + sr(k + 1500) * 28,
-      dur:    2400 + sr(k + 1700) * 1400,
-      delay:  sr(k + 1900) * 900,
+      src:    FLOWER_SRCS[Math.floor(sr(k + 11) * FLOWER_SRCS.length)],
+      x:      sr(k) * 110 - 5,
+      y:      sr(k + 300) * 15 - 20,
+      size:   160 + sr(k + 700) * 100,
+      rot:    sr(k + 900) * 360,
+      fallDx: (sr(k + 1100) - 0.5) * 200,
+      fallDy: 112 + sr(k + 1300) * 28,
+      dur:    2600 + sr(k + 1500) * 1600,
+      delay:  sr(k + 1700) * 1000,
+    });
+    k++;
+  }
+  // Dedicated left-edge strip (x: -20% to 5%)
+  for (let j = 0; j < 20; j++) {
+    tiles.push({
+      id:     k,
+      src:    FLOWER_SRCS[Math.floor(sr(k + 13) * FLOWER_SRCS.length)],
+      x:      sr(k + 200) * 15 - 20,
+      y:      sr(k) * 110 - 5,
+      size:   160 + sr(k + 600) * 100,
+      rot:    sr(k + 800) * 360,
+      fallDx: (sr(k + 1000) - 0.5) * 200,
+      fallDy: 112 + sr(k + 1200) * 28,
+      dur:    2600 + sr(k + 1400) * 1600,
+      delay:  sr(k + 1600) * 1000,
     });
     k++;
   }
@@ -60,12 +78,22 @@ const CURTAIN_TILES = (() => {
 
 function FlowerCurtain({ onFall }: { onFall: () => void }) {
   const [phase, setPhase] = useState<"show"|"fall"|"done">("show");
+  const [allLoaded, setAllLoaded] = useState(false);
+  const loadedCount = useRef(0);
+  const total = CURTAIN_TILES.length;
+
+  const handleLoad = useRef(() => {
+    loadedCount.current += 1;
+    if (loadedCount.current >= total) setAllLoaded(true);
+  }).current;
 
   useEffect(() => {
-    const t1 = setTimeout(() => { setPhase("fall"); onFall(); }, 2000);
-    const t2 = setTimeout(() => setPhase("done"), 2000 + 3800 + 900);
+    if (!allLoaded) return;
+    // Brief pause so user sees full coverage, then fall
+    const t1 = setTimeout(() => { setPhase("fall"); onFall(); }, 800);
+    const t2 = setTimeout(() => setPhase("done"), 800 + 4200 + 1000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [onFall]);
+  }, [allLoaded, onFall]);
 
   if (phase === "done") return null;
 
@@ -76,6 +104,8 @@ function FlowerCurtain({ onFall }: { onFall: () => void }) {
           key={f.id}
           src={f.src}
           draggable={false}
+          onLoad={handleLoad}
+          onError={handleLoad}
           style={{
             position:   "absolute",
             left:       `${f.x}%`,
