@@ -422,8 +422,9 @@ const TYPE_MS   = 58;   // ms per character typed
 
 export default function App() {
   const { pos, visible } = useMouseGlow();
-  const glowRef  = useRef<HTMLDivElement>(null);
-  const titleRef = useFitLines(2);
+  const glowRef   = useRef<HTMLDivElement>(null);
+  const titleRef  = useRef<HTMLHeadingElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);   // hidden clone for font measurement
   const [siteReady, setSiteReady] = useState(false);
 
   // typewriter state
@@ -431,22 +432,45 @@ export default function App() {
   const [displayText, setDisplayText] = useState(initialPhrase);
   const animRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // helper: cancel any running animation
-  const cancelAnim = () => { if (animRef.current !== null) { clearTimeout(animRef.current); animRef.current = null; } };
+  // fit font on mount (initial phrase)
+  useEffect(() => {
+    if (titleRef.current) fitText(titleRef.current, 2);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // erase → type sequence
+  // helper: cancel any running animation
+  const cancelAnim = () => {
+    if (animRef.current !== null) { clearTimeout(animRef.current); animRef.current = null; }
+  };
+
+  // Measure correct font size for `text` using the hidden clone (no React node touched)
+  const measureFontSize = (text: string): number => {
+    const el = measureRef.current;
+    if (!el) return 104;
+    el.textContent = text;            // safe — React does NOT control this div's children
+    const size = (() => {
+      let s = 104;
+      el.style.fontSize = s + "px";
+      const lineH = parseFloat(getComputedStyle(el).lineHeight);
+      while (el.scrollHeight > Math.ceil(lineH * 2 + 8) && s > 28) {
+        s -= 1;
+        el.style.fontSize = s + "px";
+      }
+      return s;
+    })();
+    el.textContent = "";
+    return size;
+  };
+
+  // erase → type sequence (never touches titleRef.current.textContent)
   const runTypewriter = (fromText: string, toText: string) => {
     cancelAnim();
     let text = fromText;
 
     const eraseStep = () => {
       if (text.length === 0) {
-        // pre-fit font for the incoming phrase before typing starts
-        if (titleRef.current) {
-          titleRef.current.textContent = toText;
-          fitText(titleRef.current, 2);
-          titleRef.current.textContent = "";
-        }
+        // measure the correct font size using the hidden clone, then apply to real h1
+        const fs = measureFontSize(toText);
+        if (titleRef.current) titleRef.current.style.fontSize = fs + "px";
         setDisplayText("");
         animRef.current = setTimeout(typeStep, TYPE_MS);
         return;
@@ -498,6 +522,16 @@ export default function App() {
         ref={glowRef}
         className="glow-cursor"
         style={{ left: pos.x, top: pos.y, opacity: visible ? 1 : 0 }}
+      />
+      {/* Hidden clone used only for font-size measurement — React owns NO children here */}
+      <div
+        ref={measureRef}
+        aria-hidden="true"
+        style={{
+          position: "absolute", visibility: "hidden", pointerEvents: "none",
+          maxWidth: "90vw", lineHeight: 1.25,
+          fontFamily: "var(--font-sans)", fontWeight: 300, fontStyle: "italic",
+        }}
       />
       <section className="hero">
         <div className="hero-inner">
