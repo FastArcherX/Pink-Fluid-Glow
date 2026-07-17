@@ -89,6 +89,10 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.5s ease;
+}
+.hero-title-wrap.fading {
+  opacity: 0;
 }
 
 .hero-title {

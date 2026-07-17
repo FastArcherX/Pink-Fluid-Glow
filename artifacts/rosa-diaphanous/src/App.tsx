@@ -193,19 +193,20 @@ function PetalRain() {
 }
 
 /* ── Shrink font to fit N lines ───────────────────────────── */
-function useFitLines(maxLines: number) {
+function useFitLines(maxLines: number, deps: unknown[] = []) {
   const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let size = 104; // px — start large
+    let size = 104;
     el.style.fontSize = size + "px";
     const lineH = parseFloat(getComputedStyle(el).lineHeight);
     while (el.scrollHeight > Math.ceil(lineH * maxLines + 8) && size > 28) {
       size -= 1;
       el.style.fontSize = size + "px";
     }
-  }, [maxLines]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxLines, ...deps]);
   return ref;
 }
 
@@ -414,11 +415,27 @@ function Road() {
 }
 
 /* ── App ─────────────────────────────────────────────────────── */
+const PHRASE_INTERVAL_MS = 60_000;
+const FADE_MS = 500;
+
 export default function App() {
   const { pos, visible } = useMouseGlow();
   const glowRef = useRef<HTMLDivElement>(null);
-  const titleRef = useFitLines(2);
+  const [phrase, setPhrase] = useState(() => pickPhrase());
+  const [fading, setFading] = useState(false);
+  const titleRef = useFitLines(2, [phrase]);
   const [siteReady, setSiteReady] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setPhrase(pickPhrase());
+        setFading(false);
+      }, FADE_MS);
+    }, PHRASE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
   const onFall = useRef(() => setSiteReady(true)).current;
 
   return (
@@ -443,7 +460,7 @@ export default function App() {
       <section className="hero">
         <div className="hero-inner">
           <span className="eyebrow">Made with 💕 by your Samu</span>
-          <div className="hero-title-wrap">
+          <div className={`hero-title-wrap${fading ? " fading" : ""}`}>
             <h1 ref={titleRef} className="hero-title">
               {phrase.split("\n").map((line, i, arr) => (
                 <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
