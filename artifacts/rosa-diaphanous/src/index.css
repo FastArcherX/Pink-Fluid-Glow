@@ -81,7 +81,6 @@ a { color: inherit; text-decoration: none; }
 }
 
 .hero-title {
-  font-size: clamp(2.8rem, 7vw, 6.5rem);
   font-weight: 300;
   font-style: italic;
   line-height: 1.25;
@@ -89,10 +88,6 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
   max-width: 90vw;
   text-align: center;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   padding-bottom: 0.25em;
 }
 

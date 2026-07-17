@@ -6,6 +6,23 @@ import bgFloral from "@assets/ChatGPT_Image_16_lug_2026,_02_47_11_1784162852061.
 
 const phrase = phrases[Math.floor(Math.random() * phrases.length)];
 
+/* ── Shrink font to fit N lines ───────────────────────────── */
+function useFitLines(maxLines: number) {
+  const ref = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let size = 104; // px — start large
+    el.style.fontSize = size + "px";
+    const lineH = parseFloat(getComputedStyle(el).lineHeight);
+    while (el.scrollHeight > Math.ceil(lineH * maxLines + 8) && size > 28) {
+      size -= 1;
+      el.style.fontSize = size + "px";
+    }
+  }, [maxLines]);
+  return ref;
+}
+
 /* ── Road path: organic S-curve ──────────────────────────────── */
 const ROAD = "M 70,108 C 160,72 270,138 390,102 C 510,66 610,132 730,98 C 830,68 890,112 940,102";
 
@@ -214,6 +231,7 @@ function Road() {
 export default function App() {
   const { pos, visible } = useMouseGlow();
   const glowRef = useRef<HTMLDivElement>(null);
+  const titleRef = useFitLines(2);
 
   return (
     <div
@@ -233,7 +251,7 @@ export default function App() {
       <section className="hero">
         <div className="hero-inner">
           <span className="eyebrow">Made with 💕 by your Samu</span>
-          <h1 className="hero-title">
+          <h1 ref={titleRef} className="hero-title">
             {phrase.split("\n").map((line, i, arr) => (
               <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
             ))}
