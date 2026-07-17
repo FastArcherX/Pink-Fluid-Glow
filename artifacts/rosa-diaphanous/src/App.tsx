@@ -9,28 +9,31 @@ const phrase = phrases[Math.floor(Math.random() * phrases.length)];
 /* ── Flower curtain (intro) ───────────────────────────────── */
 const FLOWER_SRCS = [1,2,3,4,5,7,9].map(n => `/flowers/flower${n}.png`);
 
-// Pre-generate a fixed dense grid of flowers so they don't re-randomise
-const CURTAIN_TILES = Array.from({ length: 80 }, (_, i) => {
-  const col = i % 10;
-  const row = Math.floor(i / 10);
-  return {
-    id: i,
-    src:    FLOWER_SRCS[i % FLOWER_SRCS.length],
-    x:      col * 11 + (((i * 37) % 10) - 5),
-    y:      row * 16 + (((i * 53) % 10) - 5),
-    size:   150 + (i * 29) % 120,
-    rot:    (i * 47) % 360,
-    fallDx: (((i * 31) % 80) - 40),
-    delay:  (i * 13) % 500,
-  };
-});
+// Seeded pseudo-random: gives stable but natural-looking scatter
+function sr(n: number) {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+const CURTAIN_TILES = Array.from({ length: 90 }, (_, i) => ({
+  id:      i,
+  src:     FLOWER_SRCS[Math.floor(sr(i + 7) * FLOWER_SRCS.length)],
+  x:       sr(i)       * 110 - 5,          // -5% … 105% for edge coverage
+  y:       sr(i + 50)  * 115 - 10,
+  size:    130 + sr(i + 200) * 130,
+  rot:     sr(i + 300) * 360,
+  fallDx:  (sr(i + 400) - 0.5) * 200,     // ±100px lateral drift
+  fallDy:  110 + sr(i + 500) * 30,        // 110–140 vh
+  dur:     2200 + sr(i + 600) * 1200,     // 2.2s – 3.4s per flower
+  delay:   sr(i + 700) * 900,             // 0–900ms stagger
+}));
 
 function FlowerCurtain() {
   const [phase, setPhase] = useState<"show"|"fall"|"done">("show");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("fall"), 1200);
-    const t2 = setTimeout(() => setPhase("done"), 1200 + 2400);
+    const t1 = setTimeout(() => setPhase("fall"), 2000);
+    const t2 = setTimeout(() => setPhase("done"), 2000 + 3400 + 900); // show + max-dur + max-delay
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -51,10 +54,10 @@ function FlowerCurtain() {
             height:     f.size,
             objectFit:  "contain",
             transform:  phase === "fall"
-              ? `translate3d(${f.fallDx}px, 120vh, 0) rotate(${f.rot + 60}deg)`
+              ? `translate3d(${f.fallDx}px, ${f.fallDy}vh, 0) rotate(${f.rot + sr(f.id) * 180}deg)`
               : `rotate(${f.rot}deg)`,
             transition: phase === "fall"
-              ? `transform 2.2s cubic-bezier(.4,0,.6,1) ${f.delay}ms`
+              ? `transform ${f.dur}ms cubic-bezier(.3,0,.7,1) ${f.delay}ms`
               : "none",
           }}
         />
