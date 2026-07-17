@@ -225,7 +225,7 @@ a { color: inherit; text-decoration: none; }
 .avatar-wave {
   transform-box: fill-box;
   transform-origin: center center;
-  animation: selfRockAlt 2s ease-in-out infinite;
+  animation: selfRock 1.5s ease-in-out infinite;
 }
 
 /* ─── Mobile ──────────────────────────────────────────────── */
