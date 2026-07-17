@@ -196,6 +196,20 @@ a { color: inherit; text-decoration: none; }
   animation: heartFloat 2.8s ease-in-out infinite;
 }
 
+/* ─── Petal rain ──────────────────────────────────────────── */
+.petal-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+}
+
+@keyframes petal-fall {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+  100% { transform: translate3d(var(--drift), 120vh, 0) rotate(var(--spin)); }
+}
+
 /* ─── Avatar animations ───────────────────────────────────── */
 @keyframes selfRock {
   0%, 100% { transform: rotate(-11deg) translateY(0px); }

@@ -6,6 +6,47 @@ import bgFloral from "@assets/ChatGPT_Image_16_lug_2026,_02_47_11_1784162852061.
 
 const phrase = phrases[Math.floor(Math.random() * phrases.length)];
 
+/* ── Petal rain ───────────────────────────────────────────── */
+const PETAL_COUNT = 90;
+const PETALS = Array.from({ length: PETAL_COUNT }, (_, i) => ({
+  id: i,
+  left:     Math.random() * 100,
+  size:     10 + Math.random() * 22,
+  duration: 8  + Math.random() * 14,
+  delay:    -(Math.random() * 22),
+  drift:    (Math.random() - 0.5) * 120,
+  spin:     (Math.random() - 0.5) * 600,
+  opacity:  0.35 + Math.random() * 0.5,
+  hue:      Math.random() > 0.5 ? "#f9b8c8" : "#f7d0da",
+}));
+
+function PetalRain() {
+  return (
+    <div className="petal-container" aria-hidden="true">
+      {PETALS.map(p => (
+        <svg
+          key={p.id}
+          viewBox="0 0 40 40"
+          width={p.size}
+          height={p.size}
+          style={{
+            position: "absolute",
+            left: `${p.left}%`,
+            top: "-8%",
+            opacity: p.opacity,
+            animation: `petal-fall ${p.duration}s linear ${p.delay}s infinite`,
+            "--drift": `${p.drift}px`,
+            "--spin":  `${p.spin}deg`,
+          } as React.CSSProperties}
+        >
+          <ellipse cx="20" cy="25" rx="10" ry="16" fill={p.hue} transform="rotate(-20,20,20)" />
+          <ellipse cx="20" cy="25" rx="10" ry="16" fill={p.hue} transform="rotate(20,20,20)" opacity="0.7" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
 /* ── Shrink font to fit N lines ───────────────────────────── */
 function useFitLines(maxLines: number) {
   const ref = useRef<HTMLHeadingElement>(null);
@@ -234,6 +275,8 @@ export default function App() {
   const titleRef = useFitLines(2);
 
   return (
+    <>
+    <PetalRain />
     <div
       className="site-wrapper"
       style={{
@@ -260,5 +303,6 @@ export default function App() {
       </section>
       <Road />
     </div>
+    </>
   );
 }
