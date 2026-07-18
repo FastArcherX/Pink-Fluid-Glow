@@ -149,10 +149,10 @@ a { color: inherit; text-decoration: none; }
 }
 
 .flower-spinner-img {
-  width: 180px;
-  height: 180px;
+  width: 240px;
+  height: 240px;
   object-fit: contain;
-  animation: vinyl-spin 2.2s linear infinite reverse; /* same speed, counter-clockwise */
+  animation: vinyl-spin 8s linear infinite reverse; /* bigger, slower, counter-clockwise */
 }
 
 /* ─── Vinyl — sits roughly halfway between left wall and the countdown ── */
