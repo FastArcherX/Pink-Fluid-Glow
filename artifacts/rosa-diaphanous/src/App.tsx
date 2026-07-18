@@ -403,9 +403,8 @@ function Road() {
         <img
           src="/flowers/flower2.png"
           alt=""
-          className="flower-spinner-img"
+          className={`flower-spinner-img${playing ? " spinning" : ""}`}
           aria-hidden="true"
-          style={{ animationPlayState: playing ? "running" : "paused" }}
         />
       </div>
       <div className="road-top-row">
