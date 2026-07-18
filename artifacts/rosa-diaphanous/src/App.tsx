@@ -291,11 +291,21 @@ function VinylPlayer() {
   const [playing, setPlaying] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  const sendCmd = (cmd: "play" | "pause") => {
+    iframeRef.current?.contentWindow?.postMessage({ command: cmd }, "*");
+  };
+
   const toggle = () => {
-    const cw = iframeRef.current?.contentWindow;
-    if (!cw) return;
-    cw.postMessage({ command: playing ? "pause" : "play" }, "*");
+    sendCmd(playing ? "pause" : "play");
     setPlaying(p => !p);
+  };
+
+  // Autoplay as soon as the embed is ready
+  const handleLoad = () => {
+    setTimeout(() => {
+      sendCmd("play");
+      setPlaying(true);
+    }, 800);
   };
 
   return (
@@ -305,6 +315,7 @@ function VinylPlayer() {
         src={EMBED_SRC}
         title="Spotify playlist"
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        onLoad={handleLoad}
         style={{ position: "absolute", width: 0, height: 0, border: 0, opacity: 0 }}
       />
       <button
@@ -312,7 +323,7 @@ function VinylPlayer() {
         onClick={toggle}
         aria-label={playing ? "Pause playlist" : "Play playlist"}
       >
-        <svg viewBox="0 0 130 130" width="130" height="130" aria-hidden="true">
+        <svg viewBox="0 0 130 130" width="180" height="180" aria-hidden="true">
           {/* Outer vinyl */}
           <circle cx="65" cy="65" r="63" fill="#1c1218" />
           {/* Groove rings */}
@@ -368,8 +379,9 @@ function Road() {
 
   return (
     <div className="road-section">
+      {/* Vinyl floats independently on the left */}
+      <VinylPlayer />
       <div className="road-top-row">
-        <VinylPlayer />
         <CountdownDisplay />
       </div>
       <svg
