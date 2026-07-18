@@ -289,23 +289,33 @@ const EMBED_SRC    = "https://open.spotify.com/embed/playlist/0SsmYjVt0946avI5nq
 
 function VinylPlayer() {
   const [playing, setPlaying] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeRef   = useRef<HTMLIFrameElement>(null);
+  const didAutoPlay = useRef(false);
 
   const sendCmd = (cmd: "play" | "pause") => {
     iframeRef.current?.contentWindow?.postMessage({ command: cmd }, "*");
   };
 
+  // Play on first user gesture anywhere on the page (browser requires it)
+  useEffect(() => {
+    const autoPlay = () => {
+      if (didAutoPlay.current) return;
+      didAutoPlay.current = true;
+      setTimeout(() => { sendCmd("play"); setPlaying(true); }, 120);
+    };
+    window.addEventListener("pointerdown", autoPlay, { once: true });
+    window.addEventListener("keydown",     autoPlay, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", autoPlay);
+      window.removeEventListener("keydown",     autoPlay);
+    };
+  }, []);
+
   const toggle = () => {
+    // Mark as auto-played so the window listener won't double-fire
+    didAutoPlay.current = true;
     sendCmd(playing ? "pause" : "play");
     setPlaying(p => !p);
-  };
-
-  // Autoplay as soon as the embed is ready
-  const handleLoad = () => {
-    setTimeout(() => {
-      sendCmd("play");
-      setPlaying(true);
-    }, 800);
   };
 
   return (
@@ -315,7 +325,6 @@ function VinylPlayer() {
         src={EMBED_SRC}
         title="Spotify playlist"
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        onLoad={handleLoad}
         style={{ position: "absolute", width: 0, height: 0, border: 0, opacity: 0 }}
       />
       <button
@@ -379,9 +388,8 @@ function Road() {
 
   return (
     <div className="road-section">
-      {/* Vinyl floats independently on the left */}
-      <VinylPlayer />
       <div className="road-top-row">
+        <VinylPlayer />
         <CountdownDisplay />
       </div>
       <svg

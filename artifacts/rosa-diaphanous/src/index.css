@@ -137,17 +137,13 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.75rem;
 }
 
-/* ─── Vinyl player — floats on the left of the road section ── */
+/* ─── Vinyl player ─────────────────────────────────────────── */
 .vinyl-wrapper {
-  position: absolute;
-  left: 4vw;
-  top: 50%;
-  transform: translateY(-58%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.55rem;
-  z-index: 2;
+  flex-shrink: 0;
 }
 
 .vinyl-disc {
