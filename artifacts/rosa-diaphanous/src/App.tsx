@@ -283,6 +283,59 @@ function useMouseGlow() {
   return { pos, visible };
 }
 
+/* ── Vinyl player ────────────────────────────────────────────── */
+const PLAYLIST_URL = "https://open.spotify.com/playlist/0SsmYjVt0946avI5nqxSCi?si=5d0d0fec62fe40f7&pt=eb666271fcd47da5ee3c02c6e65f9921";
+const EMBED_SRC    = "https://open.spotify.com/embed/playlist/0SsmYjVt0946avI5nqxSCi?utm_source=generator";
+
+function VinylPlayer() {
+  const [playing, setPlaying] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const toggle = () => {
+    const cw = iframeRef.current?.contentWindow;
+    if (!cw) return;
+    cw.postMessage({ command: playing ? "pause" : "play" }, "*");
+    setPlaying(p => !p);
+  };
+
+  return (
+    <div className="vinyl-wrapper">
+      <iframe
+        ref={iframeRef}
+        src={EMBED_SRC}
+        title="Spotify playlist"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        style={{ position: "absolute", width: 0, height: 0, border: 0, opacity: 0 }}
+      />
+      <button
+        className={`vinyl-disc${playing ? " spinning" : ""}`}
+        onClick={toggle}
+        aria-label={playing ? "Pause playlist" : "Play playlist"}
+      >
+        <svg viewBox="0 0 130 130" width="130" height="130" aria-hidden="true">
+          {/* Outer vinyl */}
+          <circle cx="65" cy="65" r="63" fill="#1c1218" />
+          {/* Groove rings */}
+          {[20, 28, 36, 44, 52].map(r => (
+            <circle key={r} cx="65" cy="65" r={r + 10}
+              fill="none" stroke="rgba(255,255,255,0.055)" strokeWidth="1.2" />
+          ))}
+          {/* Sheen */}
+          <ellipse cx="48" cy="40" rx="18" ry="10" fill="rgba(255,255,255,0.035)" transform="rotate(-30,48,40)" />
+          {/* Label */}
+          <circle cx="65" cy="65" r="22" fill="#c9748a" />
+          <circle cx="65" cy="65" r="20" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.7" />
+          <circle cx="65" cy="65" r="15" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
+          {/* Center hole */}
+          <circle cx="65" cy="65" r="3.5" fill="#1c1218" />
+        </svg>
+        <span className="vinyl-overlay" aria-hidden="true">{playing ? "⏸" : "▶"}</span>
+      </button>
+      <p className="vinyl-label">{playing ? "Now Playing ♪" : "Play Our Melody"}</p>
+    </div>
+  );
+}
+
 /* ── Road component ──────────────────────────────────────────── */
 function Road() {
   const START = new Date("2026-06-23T00:00:00").getTime();
@@ -315,7 +368,10 @@ function Road() {
 
   return (
     <div className="road-section">
-      <CountdownDisplay />
+      <div className="road-top-row">
+        <VinylPlayer />
+        <CountdownDisplay />
+      </div>
 
       <svg
         viewBox="0 0 1000 210"
@@ -411,6 +467,21 @@ function Road() {
           </g>
         </g>
       </svg>
+
+      {/* ── Playlist invite ── */}
+      <div className="playlist-section">
+        <p className="playlist-tagline">
+          Our story deserves a soundtrack — let's build it together ♪
+        </p>
+        <a
+          href={PLAYLIST_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="playlist-btn"
+        >
+          Build It With Me ♡
+        </a>
+      </div>
     </div>
   );
 }
