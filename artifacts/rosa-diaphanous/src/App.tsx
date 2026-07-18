@@ -1,4 +1,4 @@
-import { useLayoutEffect, useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useEffect, useRef, useState, useCallback } from "react";
 import phrases from "./phrases.json";
 import girlAvatar from "@assets/ChatGPT_Image_3_lug_2026__01_58_27-removebg-preview_1784160643734.png";
 import boyAvatar from "@assets/ChatGPT_Image_15_lug_2026__15_32_52-removebg-preview_1784160650131.png";
@@ -300,18 +300,26 @@ function VinylPlayer({ playing, onToggle, onAutoPlayed }: VinylPlayerProps) {
   const sendCmd = (cmd: "play" | "pause") => {
     iframeRef.current?.contentWindow?.postMessage({ command: cmd }, "*");
   };
+  // Keep a stable ref to sendCmd so the autoplay closure is always current
+  const sendCmdRef = useRef(sendCmd);
+  sendCmdRef.current = sendCmd;
 
-  // Sync iframe with playing prop
+  // Sync iframe with playing prop — skip first mount to avoid sending "pause" immediately
+  const didMount = useRef(false);
   useEffect(() => {
+    if (!didMount.current) { didMount.current = true; return; }
     sendCmd(playing ? "play" : "pause");
-  }, [playing]);
+  }, [playing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play on first user gesture anywhere on the page (browser requires it)
   useEffect(() => {
     const autoPlay = () => {
       if (didAutoPlay.current) return;
       didAutoPlay.current = true;
-      setTimeout(() => { onAutoPlayed(); }, 120);
+      setTimeout(() => {
+        sendCmdRef.current("play"); // direct call — no React render cycle in the path
+        onAutoPlayed();             // update UI state
+      }, 120);
     };
     window.addEventListener("pointerdown", autoPlay, { once: true });
     window.addEventListener("keydown",     autoPlay, { once: true });
@@ -319,7 +327,7 @@ function VinylPlayer({ playing, onToggle, onAutoPlayed }: VinylPlayerProps) {
       window.removeEventListener("pointerdown", autoPlay);
       window.removeEventListener("keydown",     autoPlay);
     };
-  }, [onAutoPlayed]);
+  }, []); // stable: sendCmdRef is a ref, onAutoPlayed is useCallback-memoised
 
   return (
     <div className="vinyl-wrapper">
@@ -371,8 +379,8 @@ function Road() {
 
   /* ── Shared playing state: drives both vinyl spin and flower spin ── */
   const [playing, setPlaying] = useState(false);
-  const toggle      = () => setPlaying(p => !p);
-  const onAutoPlayed = () => setPlaying(true);
+  const toggle       = useCallback(() => setPlaying(p => !p), []);
+  const onAutoPlayed = useCallback(() => setPlaying(true), []);
 
   useLayoutEffect(() => {
     if (!pathRef.current) return;
