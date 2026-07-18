@@ -390,6 +390,10 @@ function Road() {
     <div className="road-section">
       {/* Vinyl: independent element anchored top-left of this section */}
       <VinylPlayer />
+      {/* Flower spinner: mirrors vinyl position on the right side */}
+      <div className="flower-spinner-wrapper">
+        <img src="/flowers/flower2.png" alt="" className="flower-spinner-img" aria-hidden="true" />
+      </div>
       <div className="road-top-row">
         <CountdownDisplay />
       </div>

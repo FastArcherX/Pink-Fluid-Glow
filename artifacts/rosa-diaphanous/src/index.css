@@ -137,6 +137,24 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.75rem;
 }
 
+/* ─── Flower spinner — mirrors vinyl on the right ──────────────────── */
+.flower-spinner-wrapper {
+  position: absolute;
+  right: 22vw;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flower-spinner-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  animation: vinyl-spin 2.2s linear infinite reverse; /* same speed, counter-clockwise */
+}
+
 /* ─── Vinyl — sits roughly halfway between left wall and the countdown ── */
 .vinyl-wrapper {
   position: absolute;
