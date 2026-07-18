@@ -287,8 +287,13 @@ function useMouseGlow() {
 const PLAYLIST_URL = "https://open.spotify.com/playlist/0SsmYjVt0946avI5nqxSCi?si=5d0d0fec62fe40f7&pt=eb666271fcd47da5ee3c02c6e65f9921";
 const EMBED_SRC    = "https://open.spotify.com/embed/playlist/0SsmYjVt0946avI5nqxSCi?utm_source=generator";
 
-function VinylPlayer() {
-  const [playing, setPlaying] = useState(false);
+interface VinylPlayerProps {
+  playing: boolean;
+  onToggle: () => void;
+  onAutoPlayed: () => void;
+}
+
+function VinylPlayer({ playing, onToggle, onAutoPlayed }: VinylPlayerProps) {
   const iframeRef   = useRef<HTMLIFrameElement>(null);
   const didAutoPlay = useRef(false);
 
@@ -296,12 +301,17 @@ function VinylPlayer() {
     iframeRef.current?.contentWindow?.postMessage({ command: cmd }, "*");
   };
 
+  // Sync iframe with playing prop
+  useEffect(() => {
+    sendCmd(playing ? "play" : "pause");
+  }, [playing]);
+
   // Play on first user gesture anywhere on the page (browser requires it)
   useEffect(() => {
     const autoPlay = () => {
       if (didAutoPlay.current) return;
       didAutoPlay.current = true;
-      setTimeout(() => { sendCmd("play"); setPlaying(true); }, 120);
+      setTimeout(() => { onAutoPlayed(); }, 120);
     };
     window.addEventListener("pointerdown", autoPlay, { once: true });
     window.addEventListener("keydown",     autoPlay, { once: true });
@@ -309,14 +319,7 @@ function VinylPlayer() {
       window.removeEventListener("pointerdown", autoPlay);
       window.removeEventListener("keydown",     autoPlay);
     };
-  }, []);
-
-  const toggle = () => {
-    // Mark as auto-played so the window listener won't double-fire
-    didAutoPlay.current = true;
-    sendCmd(playing ? "pause" : "play");
-    setPlaying(p => !p);
-  };
+  }, [onAutoPlayed]);
 
   return (
     <div className="vinyl-wrapper">
@@ -329,10 +332,10 @@ function VinylPlayer() {
       />
       <button
         className={`vinyl-disc${playing ? " spinning" : ""}`}
-        onClick={toggle}
+        onClick={onToggle}
         aria-label={playing ? "Pause playlist" : "Play playlist"}
       >
-        <svg viewBox="0 0 130 130" width="180" height="180" aria-hidden="true">
+        <svg viewBox="0 0 130 130" width="100%" height="100%" aria-hidden="true">
           {/* Outer vinyl */}
           <circle cx="65" cy="65" r="63" fill="#1c1218" />
           {/* Groove rings */}
@@ -366,6 +369,11 @@ function Road() {
   const pathRef = useRef<SVGPathElement>(null);
   const [boyPos, setBoyPos] = useState({ x: 70, y: 108 });
 
+  /* ── Shared playing state: drives both vinyl spin and flower spin ── */
+  const [playing, setPlaying] = useState(false);
+  const toggle      = () => setPlaying(p => !p);
+  const onAutoPlayed = () => setPlaying(true);
+
   useLayoutEffect(() => {
     if (!pathRef.current) return;
     const len = pathRef.current.getTotalLength();
@@ -389,10 +397,16 @@ function Road() {
   return (
     <div className="road-section">
       {/* Vinyl: independent element anchored top-left of this section */}
-      <VinylPlayer />
-      {/* Flower spinner: mirrors vinyl position on the right side */}
+      <VinylPlayer playing={playing} onToggle={toggle} onAutoPlayed={onAutoPlayed} />
+      {/* Flower spinner: mirrors vinyl on the right, pauses with vinyl */}
       <div className="flower-spinner-wrapper">
-        <img src="/flowers/flower2.png" alt="" className="flower-spinner-img" aria-hidden="true" />
+        <img
+          src="/flowers/flower2.png"
+          alt=""
+          className="flower-spinner-img"
+          aria-hidden="true"
+          style={{ animationPlayState: playing ? "running" : "paused" }}
+        />
       </div>
       <div className="road-top-row">
         <CountdownDisplay />

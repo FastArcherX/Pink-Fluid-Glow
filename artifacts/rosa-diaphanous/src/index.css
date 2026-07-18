@@ -140,7 +140,8 @@ a { color: inherit; text-decoration: none; }
 /* ─── Flower spinner — mirrors vinyl on the right ──────────────────── */
 .flower-spinner-wrapper {
   position: absolute;
-  right: 22vw;
+  /* right: 8vw keeps it close to the right wall, away from the countdown */
+  right: 8vw;
   top: 0;
   z-index: 2;
   display: flex;
@@ -149,18 +150,17 @@ a { color: inherit; text-decoration: none; }
 }
 
 .flower-spinner-img {
-  width: 240px;
-  height: 240px;
+  width: clamp(140px, 18vw, 260px);
+  height: clamp(140px, 18vw, 260px);
   object-fit: contain;
-  animation: vinyl-spin 8s linear infinite reverse; /* bigger, slower, counter-clockwise */
+  animation: vinyl-spin 8s linear infinite reverse; /* counter-clockwise */
+  /* animationPlayState is set inline from React */
 }
 
 /* ─── Vinyl — sits roughly halfway between left wall and the countdown ── */
 .vinyl-wrapper {
   position: absolute;
-  /* 22vw ≈ midpoint between viewport-left (0) and countdown left-edge (~45vw),
-     shifted slightly right of center of that gap as requested. */
-  left: 22vw;
+  left: 8vw;   /* symmetric with flower's right: 8vw */
   top: 0;
   z-index: 2;
   display: flex;
@@ -170,6 +170,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .vinyl-disc {
+  /* responsive size */
+  width:  clamp(100px, 14vw, 180px);
+  height: clamp(100px, 14vw, 180px);
   position: relative;
   background: none;
   border: none;
