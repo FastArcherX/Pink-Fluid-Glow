@@ -285,7 +285,7 @@ function useMouseGlow() {
 
 /* ── Vinyl player ────────────────────────────────────────────── */
 const PLAYLIST_URL = "https://open.spotify.com/playlist/0SsmYjVt0946avI5nqxSCi?si=5d0d0fec62fe40f7&pt=eb666271fcd47da5ee3c02c6e65f9921";
-const EMBED_SRC    = "https://open.spotify.com/embed/playlist/0SsmYjVt0946avI5nqxSCi?utm_source=generator";
+const EMBED_SRC    = "https://open.spotify.com/embed/playlist/0SsmYjVt0946avI5nqxSCi?utm_source=generator&autoplay=1";
 
 interface VinylPlayerProps {
   playing: boolean;
@@ -300,34 +300,13 @@ function VinylPlayer({ playing, onToggle, onAutoPlayed }: VinylPlayerProps) {
   const sendCmd = (cmd: "play" | "pause") => {
     iframeRef.current?.contentWindow?.postMessage({ command: cmd }, "*");
   };
-  // Keep a stable ref to sendCmd so the autoplay closure is always current
-  const sendCmdRef = useRef(sendCmd);
-  sendCmdRef.current = sendCmd;
 
-  // Sync iframe with playing prop — skip first mount to avoid sending "pause" immediately
+  // Sync iframe with playing prop (skip mount — Spotify auto-starts via &autoplay=1)
   const didMount = useRef(false);
   useEffect(() => {
     if (!didMount.current) { didMount.current = true; return; }
     sendCmd(playing ? "play" : "pause");
   }, [playing]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Play on first user gesture anywhere on the page (browser requires it)
-  useEffect(() => {
-    const autoPlay = () => {
-      if (didAutoPlay.current) return;
-      didAutoPlay.current = true;
-      setTimeout(() => {
-        sendCmdRef.current("play"); // direct call — no React render cycle in the path
-        onAutoPlayed();             // update UI state
-      }, 120);
-    };
-    window.addEventListener("pointerdown", autoPlay, { once: true });
-    window.addEventListener("keydown",     autoPlay, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", autoPlay);
-      window.removeEventListener("keydown",     autoPlay);
-    };
-  }, []); // stable: sendCmdRef is a ref, onAutoPlayed is useCallback-memoised
 
   return (
     <div className="vinyl-wrapper">
@@ -377,8 +356,8 @@ function Road() {
   const pathRef = useRef<SVGPathElement>(null);
   const [boyPos, setBoyPos] = useState({ x: 70, y: 108 });
 
-  /* ── Shared playing state: drives both vinyl spin and flower spin ── */
-  const [playing, setPlaying] = useState(false);
+  /* ── Shared playing state — starts as true so vinyl spins immediately ── */
+  const [playing, setPlaying] = useState(true);
   const toggle       = useCallback(() => setPlaying(p => !p), []);
   const onAutoPlayed = useCallback(() => setPlaying(true), []);
 
