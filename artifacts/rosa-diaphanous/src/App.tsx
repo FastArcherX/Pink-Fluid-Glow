@@ -372,7 +372,6 @@ function Road() {
         <VinylPlayer />
         <CountdownDisplay />
       </div>
-
       <svg
         viewBox="0 0 1000 210"
         preserveAspectRatio="xMidYMid meet"
@@ -467,19 +466,16 @@ function Road() {
           </g>
         </g>
       </svg>
-
       {/* ── Playlist invite ── */}
       <div className="playlist-section">
-        <p className="playlist-tagline">
-          Our story deserves a soundtrack — let's build it together ♪
-        </p>
+        <p className="playlist-tagline">♪ As our story begins we'll need a soundtrack... let's build it together ♪</p>
         <a
           href={PLAYLIST_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="playlist-btn"
         >
-          Build It With Me ♡
+          ♡ Build It With Me ♡
         </a>
       </div>
     </div>
