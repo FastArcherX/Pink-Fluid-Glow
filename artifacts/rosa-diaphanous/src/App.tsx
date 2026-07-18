@@ -388,8 +388,9 @@ function Road() {
 
   return (
     <div className="road-section">
+      {/* Vinyl: independent element anchored top-left of this section */}
+      <VinylPlayer />
       <div className="road-top-row">
-        <VinylPlayer />
         <CountdownDisplay />
       </div>
       <svg
