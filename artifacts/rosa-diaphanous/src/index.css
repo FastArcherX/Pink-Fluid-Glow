@@ -137,12 +137,12 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.75rem;
 }
 
-/* ─── Vinyl — independent, far-left, same vertical band as countdown ── */
+/* ─── Vinyl — sits roughly halfway between left wall and the countdown ── */
 .vinyl-wrapper {
   position: absolute;
-  /* left: 0 = left border of road-section (= viewport left, since no border).
-     Using a small offset so it doesn't clip against the page edge. */
-  left: 2vw;
+  /* 22vw ≈ midpoint between viewport-left (0) and countdown left-edge (~45vw),
+     shifted slightly right of center of that gap as requested. */
+  left: 22vw;
   top: 0;
   z-index: 2;
   display: flex;
