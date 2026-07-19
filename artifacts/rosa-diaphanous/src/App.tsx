@@ -13,7 +13,7 @@ import bgFloral from "@assets/ChatGPT_Image_16_lug_2026,_02_47_11_1784162852061.
 
 function pickPhrase(): string {
   const HISTORY_KEY = "rd_phrase_history";
-  const WINDOW = Math.floor(phrases.length * 0.6); // avoid repeating last ~60% of phrases
+  const WINDOW = Math.floor(phrases.length * 0.6);
   let history: number[] = [];
   try {
     history = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
@@ -22,16 +22,13 @@ function pickPhrase(): string {
     history = [];
   }
 
-  // candidates = all indices NOT in recent history
   const candidates = phrases
     .map((_, i) => i)
     .filter((i) => !history.includes(i));
 
-  // safety: if somehow all are excluded, reset and pick freely
   const pool = candidates.length > 0 ? candidates : phrases.map((_, i) => i);
   const picked = pool[Math.floor(Math.random() * pool.length)];
 
-  // push picked to history, keep only last WINDOW entries
   history = [...history, picked].slice(-WINDOW);
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
@@ -44,16 +41,14 @@ function pickPhrase(): string {
 
 const phrase = pickPhrase();
 
-/* ── Flower curtain (intro) ───────────────────────────────── */
+/* ── Curtain parameters ───────────────────────────────────── */
 const FLOWER_SRCS = [1, 2, 3, 4, 5, 7, 9].map((n) => `/flowers/flower${n}.png`);
 
-// Seeded pseudo-random: gives stable but natural-looking scatter
 function sr(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 }
 
-// Stratified grid (14 cols × 11 rows) + top/left edge strip + fillers
 const COLS = 14,
   ROWS = 11;
 const CURTAIN_TILES = (() => {
@@ -62,7 +57,6 @@ const CURTAIN_TILES = (() => {
   const cw = 110 / COLS;
   const ch = 110 / ROWS;
 
-  // Main grid — each cell offset -12% so row0/col0 bleed well above/left of viewport
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
       tiles.push({
@@ -80,7 +74,6 @@ const CURTAIN_TILES = (() => {
       k++;
     }
   }
-  // Dedicated top-edge strip (y: -20% to 5%)
   for (let j = 0; j < 20; j++) {
     tiles.push({
       id: k,
@@ -96,7 +89,6 @@ const CURTAIN_TILES = (() => {
     });
     k++;
   }
-  // Dedicated left-edge strip (x: -20% to 5%)
   for (let j = 0; j < 20; j++) {
     tiles.push({
       id: k,
@@ -136,9 +128,19 @@ function FlowerCurtain({ onFall, unlockMusic, onReady }: FlowerCurtainProps) {
   const handleUnlock = () => {
     if (phase !== "show") return;
 
-    // IMPORTANTE: deve essere dentro il click
-    unlockMusic();
+    try {
+      const ctx = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch (e) {
+      console.log("AudioContext fallback bypass", e);
+    }
 
+    unlockMusic();
     setPhase("fall");
     onFall();
 
@@ -257,30 +259,10 @@ function PetalRain() {
   );
 }
 
-/* ── Shrink font to fit N lines (imperative helper) ──────── */
-function fitText(el: HTMLElement, maxLines: number) {
-  let size = 104;
-  el.style.fontSize = size + "px";
-  const lineH = parseFloat(getComputedStyle(el).lineHeight);
-  while (el.scrollHeight > Math.ceil(lineH * maxLines + 8) && size > 28) {
-    size -= 1;
-    el.style.fontSize = size + "px";
-  }
-}
-
-function useFitLines(maxLines: number) {
-  const ref = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    if (ref.current) fitText(ref.current, maxLines);
-  }, [maxLines]);
-  return ref;
-}
-
-/* ── Road path: organic S-curve ──────────────────────────────── */
+/* ── Static Maps & Constants ───────────────────────────────── */
 const ROAD =
   "M 70,108 C 160,72 270,138 390,102 C 510,66 610,132 730,98 C 830,68 890,112 940,102";
 
-/* ── Decorative hearts along the wave ────────────────────────── */
 const HEARTS = [
   { x: 164, y: 58, s: 10, d: 0.0 },
   { x: 295, y: 145, s: 7, d: 0.6 },
@@ -290,7 +272,6 @@ const HEARTS = [
   { x: 845, y: 130, s: 7, d: 0.5 },
 ];
 
-/* ── Countdown hook ──────────────────────────────────────────── */
 const TARGET = new Date("2026-08-27T23:59:59").getTime();
 
 function useCountdown() {
@@ -337,7 +318,6 @@ function CountdownDisplay() {
   );
 }
 
-/* ── Mouse glow hook ─────────────────────────────────────────── */
 function useMouseGlow() {
   const [pos, setPos] = useState({ x: -1000, y: -1000 });
   const [visible, setVisible] = useState(false);
@@ -357,7 +337,7 @@ function useMouseGlow() {
   return { pos, visible };
 }
 
-/* ── Vinyl player ────────────────────────────────────────────── */
+/* ── Vinyl Player ─────────────────────────────────────────── */
 const PLAYLIST_URL =
   "https://open.spotify.com/playlist/0SsmYjVt0946avI5nqxSCi?si=5d0d0fec62fe40f7&pt=eb666271fcd47da5ee3c02c6e65f9921";
 const SPOTIFY_URI = "spotify:playlist:0SsmYjVt0946avI5nqxSCi";
@@ -365,49 +345,226 @@ const SPOTIFY_IFRAME_API_SRC = "https://open.spotify.com/embed/iframe-api/v1";
 
 interface VinylPlayerProps {
   playing: boolean;
-  unlocked: boolean;
   onToggle: () => void;
-  onAutoPlayed: () => void;
-  exposeUnlock: (fn: () => void) => void;
 }
 
-function VinylPlayer({
+function VinylPlayer({ playing, onToggle }: VinylPlayerProps) {
+  return (
+    <div className="vinyl-wrapper">
+      <div
+        className={`vinyl-disc${playing ? " spinning" : ""}`}
+        onClick={onToggle}
+        style={{ cursor: "pointer" }}
+      >
+        <svg viewBox="0 0 130 130" width="100%" height="100%">
+          <circle cx="65" cy="65" r="63" fill="#1c1218" />
+          {[20, 28, 36, 44, 52].map((r) => (
+            <circle
+              key={r}
+              cx="65"
+              cy="65"
+              r={r + 10}
+              fill="none"
+              stroke="rgba(255,255,255,0.055)"
+              strokeWidth="1.2"
+            />
+          ))}
+          <ellipse
+            cx="48"
+            cy="40"
+            rx="18"
+            ry="10"
+            fill="rgba(255,255,255,0.035)"
+            transform="rotate(-30,48,40)"
+          />
+          <circle cx="65" cy="65" r="22" fill="#c9748a" />
+          <circle
+            cx="65"
+            cy="65"
+            r="20"
+            fill="none"
+            stroke="rgba(255,255,255,0.22)"
+            strokeWidth="0.7"
+          />
+          <circle
+            cx="65"
+            cy="65"
+            r="15"
+            fill="none"
+            stroke="rgba(255,255,255,0.12)"
+            strokeWidth="0.5"
+          />
+          <circle cx="65" cy="65" r="3.5" fill="#1c1218" />
+        </svg>
+        <span className="vinyl-overlay">{playing ? "⏸" : "▶"}</span>
+      </div>
+      <p className="vinyl-label">
+        {playing ? "Now Playing ♪" : "Play Our Melody"}
+      </p>
+    </div>
+  );
+}
+
+/* ── Road Section ────────────────────────────────────────────── */
+function Road({
   playing,
-  unlocked,
   onToggle,
-  onAutoPlayed,
-  exposeUnlock,
-}: VinylPlayerProps) {
+}: {
+  playing: boolean;
+  onToggle: () => void;
+}) {
+  const START = new Date("2026-06-23T00:00:00").getTime();
+  const END = new Date("2026-08-27T23:59:59").getTime();
+  const now = Date.now();
+  const progress = Math.min(1, Math.max(0, (now - START) / (END - START)));
+
+  const pathRef = useRef<SVGPathElement>(null);
+  const [boyPos, setBoyPos] = useState({ x: 70, y: 108 });
+
+  useLayoutEffect(() => {
+    if (!pathRef.current) return;
+    const len = pathRef.current.getTotalLength();
+    const pt = pathRef.current.getPointAtLength(progress * len);
+    setBoyPos({ x: pt.x, y: pt.y });
+  }, [progress]);
+
+  const GIRL_X = 940;
+  const GIRL_Y = 102;
+  const BOY_W = 108;
+  const BOY_H = 108;
+  const GIRL_W = 120;
+  const GIRL_H = 120;
+
+  return (
+    <div className="road-section">
+      <VinylPlayer playing={playing} onToggle={onToggle} />
+      <div className="flower-spinner-wrapper">
+        <img
+          src="/flowers/flower2.png"
+          alt=""
+          className={`flower-spinner-img${playing ? " spinning" : ""}`}
+          aria-hidden="true"
+        />
+      </div>
+      <div className="road-top-row">
+        <CountdownDisplay />
+      </div>
+      <svg
+        viewBox="0 0 1000 210"
+        preserveAspectRatio="xMidYMid meet"
+        className="road-svg"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <clipPath id="cp-past">
+            <rect x="0" y="0" width={boyPos.x} height="210" />
+          </clipPath>
+          <clipPath id="cp-future">
+            <rect x={boyPos.x} y="0" width="1000" height="210" />
+          </clipPath>
+          <filter id="shadow" x="-20%" y="-10%" width="140%" height="130%">
+            <feDropShadow
+              dx="0"
+              dy="3"
+              stdDeviation="3"
+              floodColor="rgba(60,20,30,0.18)"
+            />
+          </filter>
+        </defs>
+
+        <path d={ROAD} ref={pathRef} fill="none" stroke="none" />
+        <path
+          d={ROAD}
+          className="road-path road-future"
+          clipPath="url(#cp-future)"
+        />
+        <path
+          d={ROAD}
+          className="road-path road-past"
+          clipPath="url(#cp-past)"
+        />
+
+        <circle cx="70" cy="108" r="4" className="dot-past" />
+        <circle cx="940" cy="102" r="4" className="dot-future" />
+        <circle cx={boyPos.x} cy={boyPos.y} r="4" className="dot-past" />
+
+        {HEARTS.map((h, i) => (
+          <text
+            key={i}
+            x={h.x}
+            y={h.y}
+            fontSize={h.s}
+            textAnchor="middle"
+            className="heart-float"
+            style={{ animationDelay: `${h.d}s` }}
+          >
+            ♥
+          </text>
+        ))}
+
+        <g transform={`translate(${GIRL_X}, ${GIRL_Y})`}>
+          <g className="avatar-wave">
+            <image
+              href={girlAvatar}
+              x={-GIRL_W / 2}
+              y={-GIRL_H + 22}
+              width={GIRL_W}
+              height={GIRL_H}
+              filter="url(#shadow)"
+            />
+          </g>
+        </g>
+
+        <g transform={`translate(${boyPos.x}, ${boyPos.y})`}>
+          <g className="avatar-bob">
+            <image
+              href={boyAvatar}
+              x={-BOY_W / 2}
+              y={-BOY_H + 22}
+              width={BOY_W}
+              height={BOY_H}
+              filter="url(#shadow)"
+            />
+          </g>
+        </g>
+      </svg>
+      <div className="playlist-section">
+        <p className="playlist-tagline">
+          ♪ As our story begins we'll need a soundtrack... let's build it
+          together ♪
+        </p>
+        <a
+          href={PLAYLIST_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="playlist-btn"
+        >
+          ♡ Build It With Me ♡
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main App ────────────────────────────────────────────────── */
+const PHRASE_INTERVAL_MS = 60_000;
+const ERASE_MS = 38;
+const TYPE_MS = 58;
+
+export default function App() {
+  const { pos, visible } = useMouseGlow();
+  const glowRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+
+  const [curtainImagesLoaded, setCurtainImagesLoaded] = useState(false);
+  const [siteReady, setSiteReady] = useState(false);
+
   const embedRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<any>(null);
-  const autoplayStartedRef = useRef(false);
+  const [playing, setPlaying] = useState(false);
 
-  const unlockRef = useRef<() => void>(() => {});
-  useEffect(() => {
-    exposeUnlock(() => {
-      unlockRef.current();
-    });
-  }, [exposeUnlock]);
-
-  const tryStartPlayback = useCallback(() => {
-    if (!playing || !unlocked) return;
-
-    const controller = controllerRef.current;
-    if (!controller) {
-      return;
-    }
-
-    try {
-      if (typeof controller.resume === "function") {
-        controller.resume();
-      } else if (typeof controller.play === "function") {
-        controller.play();
-      }
-    } catch (e) {
-      console.log("Spotify unlock error", e);
-    }
-  }, [playing, unlocked]);
-
+  // Inizializzazione controllore passivo
   useEffect(() => {
     let alive = true;
 
@@ -416,34 +573,20 @@ function VinylPlayer({
 
       IFrameAPI.createController(
         embedRef.current,
-        { uri: SPOTIFY_URI, width: 1, height: 1 },
+        { uri: SPOTIFY_URI, width: 300, height: 80 },
         (controller: any) => {
           if (!alive) {
             controller.destroy?.();
             return;
           }
-
           controllerRef.current = controller;
-          unlockRef.current = () => {
-            try {
-              controller.resume?.();
-            } catch {}
-          };
 
-          controller.addListener?.("ready", () => {
-            if (playing) {
-              tryStartPlayback();
+          controller.addListener?.("playback_update", (e: any) => {
+            // Aggiorna lo stato nel caso in cui finisca la playlist
+            if (e.data.isPaused && e.data.position === 0) {
+              setPlaying(false);
             }
           });
-
-          controller.addListener?.("playback_started", () => {
-            autoplayStartedRef.current = true;
-            onAutoPlayed();
-          });
-
-          if (playing) {
-            tryStartPlayback();
-          }
         },
       );
     };
@@ -470,318 +613,40 @@ function VinylPlayer({
       alive = false;
       (window as any).onSpotifyIframeApiReady = previousCallback;
     };
-  }, [onAutoPlayed, playing, unlocked, tryStartPlayback]);
-
-  return (
-    <div className="vinyl-wrapper">
-      <div
-        ref={embedRef}
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          overflow: "hidden",
-          opacity: 0,
-          pointerEvents: "none",
-        }}
-      />
-      <button
-        className={`vinyl-disc${playing ? " spinning" : ""}`}
-        onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) =>
-          e.stopPropagation()
-        }
-        onClick={() => {
-          if (controllerRef.current) {
-            try {
-              if (playing) {
-                controllerRef.current.pause?.();
-              } else {
-                controllerRef.current.resume?.();
-              }
-            } catch (err) {
-              console.error("Errore Spotify:", err);
-            }
-          }
-          onToggle();
-        }}
-        aria-label={playing ? "Pause playlist" : "Play playlist"}
-      >
-        <svg
-          viewBox="0 0 130 130"
-          width="100%"
-          height="100%"
-          aria-hidden="true"
-        >
-          {/* Outer vinyl */}
-          <circle cx="65" cy="65" r="63" fill="#1c1218" />
-          {/* Groove rings */}
-          {[20, 28, 36, 44, 52].map((r) => (
-            <circle
-              key={r}
-              cx="65"
-              cy="65"
-              r={r + 10}
-              fill="none"
-              stroke="rgba(255,255,255,0.055)"
-              strokeWidth="1.2"
-            />
-          ))}
-          {/* Sheen */}
-          <ellipse
-            cx="48"
-            cy="40"
-            rx="18"
-            ry="10"
-            fill="rgba(255,255,255,0.035)"
-            transform="rotate(-30,48,40)"
-          />
-          {/* Label */}
-          <circle cx="65" cy="65" r="22" fill="#c9748a" />
-          <circle
-            cx="65"
-            cy="65"
-            r="20"
-            fill="none"
-            stroke="rgba(255,255,255,0.22)"
-            strokeWidth="0.7"
-          />
-          <circle
-            cx="65"
-            cy="65"
-            r="15"
-            fill="none"
-            stroke="rgba(255,255,255,0.12)"
-            strokeWidth="0.5"
-          />
-          {/* Center hole */}
-          <circle cx="65" cy="65" r="3.5" fill="#1c1218" />
-        </svg>
-        <span className="vinyl-overlay" aria-hidden="true">
-          {playing ? "⏸" : "▶"}
-        </span>
-      </button>
-      <p className="vinyl-label">
-        {playing ? "Now Playing ♪" : "Play Our Melody"}
-      </p>
-    </div>
-  );
-}
-
-/* ── Road component ──────────────────────────────────────────── */
-function Road({
-  unlocked,
-  exposeMusicUnlock,
-}: {
-  unlocked: boolean;
-  exposeMusicUnlock: (fn: () => void) => void;
-}) {
-  const START = new Date("2026-06-23T00:00:00").getTime();
-  const END = new Date("2026-08-27T23:59:59").getTime();
-  const now = Date.now();
-  const progress = Math.min(1, Math.max(0, (now - START) / (END - START)));
-
-  const pathRef = useRef<SVGPathElement>(null);
-  const [boyPos, setBoyPos] = useState({ x: 70, y: 108 });
-
-  /* ── Shared playing state — starts as true so vinyl spins immediately ── */
-  const [playing, setPlaying] = useState(true);
-  const toggle = useCallback(() => setPlaying((p) => !p), []);
-  const onAutoPlayed = useCallback(() => setPlaying(true), []);
-
-  useLayoutEffect(() => {
-    if (!pathRef.current) return;
-    const len = pathRef.current.getTotalLength();
-    const pt = pathRef.current.getPointAtLength(progress * len);
-    setBoyPos({ x: pt.x, y: pt.y });
   }, []);
 
-  const daysPassed = Math.floor((now - START) / 864e5);
-  const daysLeft = Math.max(0, 65 - daysPassed);
+  // Gestione pulita del Play/Pause
+  const handleToggle = useCallback(() => {
+    if (!controllerRef.current) return;
 
-  /* girl is always at the path endpoint */
-  const GIRL_X = 940;
-  const GIRL_Y = 102;
+    if (playing) {
+      controllerRef.current.togglePlay?.();
+      setPlaying(false);
+    } else {
+      controllerRef.current.resume?.();
+      setPlaying(true);
+    }
+  }, [playing]);
 
-  /* avatar sizes */
-  const BOY_W = 108;
-  const BOY_H = 108;
-  const GIRL_W = 120;
-  const GIRL_H = 120;
-
-  return (
-    <div className="road-section">
-      {/* Vinyl: independent element anchored top-left of this section */}
-      <VinylPlayer
-        playing={playing}
-        unlocked={unlocked}
-        onToggle={toggle}
-        onAutoPlayed={onAutoPlayed}
-        exposeUnlock={exposeMusicUnlock}
-      />
-      {/* Flower spinner: mirrors vinyl on the right, pauses with vinyl */}
-      <div className="flower-spinner-wrapper">
-        <img
-          src="/flowers/flower2.png"
-          alt=""
-          className={`flower-spinner-img${playing ? " spinning" : ""}`}
-          aria-hidden="true"
-        />
-      </div>
-      <div className="road-top-row">
-        <CountdownDisplay />
-      </div>
-      <svg
-        viewBox="0 0 1000 210"
-        preserveAspectRatio="xMidYMid meet"
-        className="road-svg"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          {/* Split road at boy's x position */}
-          <clipPath id="cp-past">
-            <rect x="0" y="0" width={boyPos.x} height="210" />
-          </clipPath>
-          <clipPath id="cp-future">
-            <rect x={boyPos.x} y="0" width="1000" height="210" />
-          </clipPath>
-
-          {/* Soft glow filter for avatars */}
-          <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Drop shadow for avatars */}
-          <filter id="shadow" x="-20%" y="-10%" width="140%" height="130%">
-            <feDropShadow
-              dx="0"
-              dy="3"
-              stdDeviation="3"
-              floodColor="rgba(60,20,30,0.18)"
-            />
-          </filter>
-        </defs>
-
-        {/* Invisible path for getPointAtLength */}
-        <path d={ROAD} ref={pathRef} fill="none" stroke="none" />
-
-        {/* ── Road: future (light) ── */}
-        <path
-          d={ROAD}
-          className="road-path road-future"
-          clipPath="url(#cp-future)"
-        />
-        {/* ── Road: past (dark) ── */}
-        <path
-          d={ROAD}
-          className="road-path road-past"
-          clipPath="url(#cp-past)"
-        />
-
-        {/* ── Start & end dots ── */}
-        <circle cx="70" cy="108" r="4" className="dot-past" />
-        <circle cx="940" cy="102" r="4" className="dot-future" />
-
-        {/* ── Boy position dot ── */}
-        <circle cx={boyPos.x} cy={boyPos.y} r="4" className="dot-past" />
-
-        {/* ── Decorative hearts ── */}
-        {HEARTS.map((h, i) => (
-          <text
-            key={i}
-            x={h.x}
-            y={h.y}
-            fontSize={h.s}
-            textAnchor="middle"
-            className="heart-float"
-            style={{ animationDelay: `${h.d}s` }}
-          >
-            ♥
-          </text>
-        ))}
-
-        {/* ── Girl avatar — end of road ── */}
-        <g transform={`translate(${GIRL_X}, ${GIRL_Y})`}>
-          <g className="avatar-wave">
-            <image
-              href={girlAvatar}
-              x={-GIRL_W / 2}
-              y={-GIRL_H + 22}
-              width={GIRL_W}
-              height={GIRL_H}
-              filter="url(#shadow)"
-            />
-          </g>
-        </g>
-
-        {/* ── Boy avatar — current progress ── */}
-        <g transform={`translate(${boyPos.x}, ${boyPos.y})`}>
-          <g className="avatar-bob">
-            <image
-              href={boyAvatar}
-              x={-BOY_W / 2}
-              y={-BOY_H + 22}
-              width={BOY_W}
-              height={BOY_H}
-              filter="url(#shadow)"
-            />
-          </g>
-        </g>
-      </svg>
-      {/* ── Playlist invite ── */}
-      <div className="playlist-section">
-        <p className="playlist-tagline">
-          ♪ As our story begins we'll need a soundtrack... let's build it
-          together ♪
-        </p>
-        <a
-          href={PLAYLIST_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="playlist-btn"
-        >
-          ♡ Build It With Me ♡
-        </a>
-      </div>
-    </div>
-  );
-}
-
-/* ── App ─────────────────────────────────────────────────────── */
-const PHRASE_INTERVAL_MS = 60_000;
-const ERASE_MS = 38; // ms per character erased
-const TYPE_MS = 58; // ms per character typed
-
-export default function App() {
-  const { pos, visible } = useMouseGlow();
-  const glowRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null); // hidden clone for font measurement
-
-  const [curtainImagesLoaded, setCurtainImagesLoaded] = useState(false);
-  const [siteReady, setSiteReady] = useState(false);
-
-  const musicUnlockRef = useRef<() => void>(() => {});
-  const exposeMusicUnlock = useCallback((fn: () => void) => {
-    musicUnlockRef.current = fn;
-  }, []);
+  // Trigger dal sipario
   const unlockMusic = useCallback(() => {
-    musicUnlockRef.current();
+    if (controllerRef.current) {
+      controllerRef.current.resume?.();
+      setPlaying(true);
+    } else {
+      setTimeout(() => {
+        controllerRef.current?.resume?.();
+        setPlaying(true);
+      }, 600);
+    }
   }, []);
 
-  // typewriter state
   const initialPhrase = useRef(pickPhrase()).current;
   const [displayText, setDisplayText] = useState(initialPhrase);
   const animRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Aggiorna dinamicamente il titolo del documento e la favicon all'avvio
   useEffect(() => {
     document.title = "Miss U Iasmi";
-
     let favicon = document.querySelector(
       "link[rel~='icon']",
     ) as HTMLLinkElement;
@@ -793,12 +658,6 @@ export default function App() {
     favicon.href = "/flowers/flower1.png";
   }, []);
 
-  // fit font on mount (initial phrase)
-  useEffect(() => {
-    if (titleRef.current) fitText(titleRef.current, 2);
-  }, [curtainImagesLoaded]); // refit whenever layout reveals
-
-  // helper: cancel any running animation
   const cancelAnim = () => {
     if (animRef.current !== null) {
       clearTimeout(animRef.current);
@@ -806,12 +665,13 @@ export default function App() {
     }
   };
 
-  // Measure correct font size for `text` using the hidden clone (no React node touched)
-  const measureFontSize = (text: string): number => {
-    const el = measureRef.current;
-    if (!el) return 104;
-    el.textContent = text; // safe — React does NOT control this div's children
-    const size = (() => {
+  useEffect(() => {
+    if (!curtainImagesLoaded) return;
+
+    const measureFontSize = (text: string): number => {
+      const el = measureRef.current;
+      if (!el) return 104;
+      el.textContent = text;
       let s = 104;
       el.style.fontSize = s + "px";
       const lineH = parseFloat(getComputedStyle(el).lineHeight);
@@ -819,46 +679,44 @@ export default function App() {
         s -= 1;
         el.style.fontSize = s + "px";
       }
+      el.textContent = "";
       return s;
-    })();
-    el.textContent = "";
-    return size;
-  };
+    };
 
-  // erase → type sequence (never touches titleRef.current.textContent)
-  const runTypewriter = (fromText: string, toText: string) => {
-    cancelAnim();
-    let text = fromText;
+    if (titleRef.current) {
+      const initialFs = measureFontSize(displayText);
+      titleRef.current.style.fontSize = initialFs + "px";
+    }
 
-    const eraseStep = () => {
-      if (text.length === 0) {
-        // measure the correct font size using the hidden clone, then apply to real h1
-        const fs = measureFontSize(toText);
-        if (titleRef.current) titleRef.current.style.fontSize = fs + "px";
-        setDisplayText("");
-        animRef.current = setTimeout(typeStep, TYPE_MS);
-        return;
-      }
-      text = text.slice(0, -1);
-      setDisplayText(text);
+    const runTypewriter = (fromText: string, toText: string) => {
+      cancelAnim();
+      let text = fromText;
+
+      const eraseStep = () => {
+        if (text.length === 0) {
+          const fs = measureFontSize(toText);
+          if (titleRef.current) titleRef.current.style.fontSize = fs + "px";
+          setDisplayText("");
+          animRef.current = setTimeout(typeStep, TYPE_MS);
+          return;
+        }
+        text = text.slice(0, -1);
+        setDisplayText(text);
+        animRef.current = setTimeout(eraseStep, ERASE_MS);
+      };
+
+      let typeIdx = 0;
+      const typeStep = () => {
+        typeIdx++;
+        setDisplayText(toText.slice(0, typeIdx));
+        if (typeIdx < toText.length) {
+          animRef.current = setTimeout(typeStep, TYPE_MS);
+        }
+      };
+
       animRef.current = setTimeout(eraseStep, ERASE_MS);
     };
 
-    let typeIdx = 0;
-    const typeStep = () => {
-      typeIdx++;
-      setDisplayText(toText.slice(0, typeIdx));
-      if (typeIdx < toText.length) {
-        animRef.current = setTimeout(typeStep, TYPE_MS);
-      }
-    };
-
-    animRef.current = setTimeout(eraseStep, ERASE_MS);
-  };
-
-  // 60-second cycle (active only when everything is loaded)
-  useEffect(() => {
-    if (!curtainImagesLoaded) return;
     const id = setInterval(() => {
       const next = pickPhrase();
       setDisplayText((cur) => {
@@ -866,12 +724,12 @@ export default function App() {
         return cur;
       });
     }, PHRASE_INTERVAL_MS);
+
     return () => {
       clearInterval(id);
       cancelAnim();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [curtainImagesLoaded]);
+  }, [curtainImagesLoaded, displayText]);
 
   const onFall = useRef(() => setSiteReady(true)).current;
   const onCurtainReady = useCallback(() => setCurtainImagesLoaded(true), []);
@@ -884,7 +742,6 @@ export default function App() {
         onReady={onCurtainReady}
       />
 
-      {/* Il resto dell'app renderizza la struttura DOM solo dopo che il sipario è pronto */}
       {curtainImagesLoaded && (
         <>
           {siteReady && <PetalRain />}
@@ -904,7 +761,6 @@ export default function App() {
               className="glow-cursor"
               style={{ left: pos.x, top: pos.y, opacity: visible ? 1 : 0 }}
             />
-            {/* Hidden clone used only for font-size measurement — React owns NO children here */}
             <div
               ref={measureRef}
               aria-hidden="true"
@@ -937,10 +793,32 @@ export default function App() {
                 </div>
               </div>
             </section>
-            <Road unlocked={siteReady} exposeMusicUnlock={exposeMusicUnlock} />
+
+            <Road playing={playing} onToggle={handleToggle} />
           </div>
         </>
       )}
+
+      {/* 
+        SOLUZIONE DEFINITIVA COMPATIBILITÀ:
+        L'iframe è montato a pieno schermo ma posizionato DIETRO a tutto il layout (z-index: -1).
+        Ha un'opacità minima (0.001) e pointer-events: none, così è visibile tecnicamente per Spotify
+        ma non interferisce né visivamente né a livello di click con gli elementi soprastanti.
+      */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: -1,
+          pointerEvents: "none",
+          opacity: 0.001,
+          width: "100vw",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
+        <div ref={embedRef} style={{ width: "100%", height: "100%" }} />
+      </div>
     </>
   );
 }
